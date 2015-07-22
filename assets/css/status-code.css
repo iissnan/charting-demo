@@ -1,0 +1,26 @@
+.stack-legend {
+  color: #585858;
+  font-size: 15px;
+}
+
+.stack-legend-item {
+  display: inline-block;
+  margin-left: 5px;
+}
+
+.stack-legend-item i {
+  display: inline-block;
+  margin-right: 3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 10px;
+  border: 1px solid #585858;
+}
+
+.stack-legend-item.active i {
+  background: #585858;
+}
+
+.c3-axis-y line, .c3-axis-y path {
+  stroke: transparent;
+}
