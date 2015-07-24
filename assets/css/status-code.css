@@ -6,6 +6,7 @@
 .stack-legend-item {
   display: inline-block;
   margin-left: 5px;
+  cursor: pointer;
 }
 
 .stack-legend-item i {

@@ -5,57 +5,84 @@ var HTTP_CODES = [
   '410', '411', '412', '413', '414', '415', '416', '417',
   '500', '501', '502', '503', '504', '505'
 ];
-var API_ENDPOINTS = [
-  'user', 'authorizations', 'search', 'emails', 'events', 'feeds',
-  'issues', 'notifications', 'teams'
-];
 
 var chart = {
-  init: function () {
+  init: function (options) {
     this.chart = null;
-    this.data();
+    this.columns = [];
+
+    var defaults = {
+      // d3.scale.category20()
+      colors: [
+        '#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a',
+        '#d62728', '#ff9896', '#9467bd', '#c5b0d5', '#8c564b', '#c49c94',
+        '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d',
+        '#17becf', '#9edae5'
+      ],
+      categoryAll: [
+        'user', 'authorizations', 'search', 'emails', 'events', 'feeds',
+        'issues', 'notifications', 'teams'
+      ],
+      categorySize: 5,
+      dimensionAll: HTTP_CODES,
+      dimensionSize: 5,
+      bindto: '.chart'
+    };
+
+    this.settings = $.extend({}, defaults, options);
+    this.categories = this.getCategories();
+    this.dimensions = this.getDimensions();
+    this.columns = this.getColumns();
+    this.colors = this.getColors();
+
     this.stackLegend();
     this.draw();
   },
 
-  colors: (function () {
+  getColors: function () {
     var colors = {};
-    var CODE_COLORS = {
-      200: '#31a354',
-      300: '#3182bd',
-      400: '#fd8d3c',
-      500: '#e6550d'
-    };
+    var availableColors = this.settings.colors;
 
-    HTTP_CODES.forEach(function (code) {
-      var series = code.substring(0, 1) + '00';
-      var baseColor = CODE_COLORS[series];
-
-      colors[code] = d3.rgb(baseColor).darker( (code - series)/5 ).toString();
+    this.categories.map(function (category) {
+      colors[category] = availableColors[helpers.random(0, availableColors.length)];
     });
 
     return colors;
-  }()),
-
-  data: function () {
-    var codeSize = HTTP_CODES.length;
-    var row;
-    var MAX_VALUE = 1e3;
-    this.columns = [];
-
-    for (var i = 0; i < 5; i++) {
-      row = [];
-      row.push(HTTP_CODES[helpers.random(0, codeSize)]);
-      for (var j = 0; j < this.category.size; j++) {
-        row.push(helpers.random(1, MAX_VALUE));
-      }
-      this.columns.push(row);
-    }
   },
 
-  category: {
-    data: API_ENDPOINTS,
-    size: API_ENDPOINTS.length
+  getCategories: function () {
+    var settings = this.settings;
+    return d3.range(settings.categorySize).map(function () {
+      return settings.categoryAll[
+        helpers.random(0, settings.categoryAll.length)
+      ];
+    }).sort();
+  },
+
+  getColumns: function () {
+    var self = this;
+    var MAX_VALUE = 1e3;
+    var columns = [];
+    var column;
+
+    this.dimensions.map(function (dimension) {
+      column = [dimension];
+      column = column.concat(self.categories.map(function () {
+        return helpers.random(1, MAX_VALUE);
+      }));
+      columns.push(column);
+    });
+
+    return columns;
+  },
+
+  getDimensions: function () {
+    var settings = this.settings;
+    return d3.range(settings.dimensionSize).map(function () {
+      return settings.dimensionAll[
+        helpers.random(0, settings.dimensionAll.length)
+      ];
+    });
   },
 
   stack: function () {
@@ -119,7 +146,7 @@ var chart = {
     var self = this;
 
     this.chart = c3.generate({
-      bindto: '.chart',
+      bindto: self.settings.bindto,
       size: {
         height: 600
       },
@@ -136,7 +163,7 @@ var chart = {
             text: 'API Endpoint',
             position: 'outer-top'
           },
-          categories: self.category.data
+          categories: self.categories
         },
         y: {
           label: {
