@@ -46,14 +46,9 @@ var chartState = {
 
 var chartLabels = {
   init: function () {
-    this.chart = null;
+    this.chart = {};
     this.categories = this.getCategories();
     this.columns = this.getColumns();
-
-    console.log('categories', this.categories);
-    console.log('columns', this.columns);
-
-    this.draw();
   },
   getCategories: function () {
     var categories = [];
@@ -87,31 +82,58 @@ var chartLabels = {
 
     return [column];
   },
+
   draw: function () {
     var self = this;
-    this.chart = c3.generate({
-      bindto: '.chart-labels',
-      data: {
-        type: 'bar',
-        columns: self.columns
-      },
-      axis: {
-        x: {
-          type: 'category',
-          categories: self.categories,
-          tick: {
-            rotate: -30,
-            multiline: false
+    return {
+      bar: function () {
+        self.init();
+
+        self.chart.bar = c3.generate({
+          bindto: '.chart-labels-bar',
+          data: {
+            type: 'bar',
+            columns: self.columns
           },
-          height: 100
-        }
+          axis: {
+            x: {
+              type: 'category',
+              categories: self.categories,
+              tick: {
+                rotate: -30,
+                multiline: false
+              },
+              height: 100
+            }
+          },
+          legend: {
+            show: false
+          }
+        });
       },
-      legend: {
-        show: false
+      pie: function () {
+        self.chart.pie = c3.generate({
+          bindto: '.chart-labels-pie',
+          data: {
+            type: 'pie',
+            columns: (function () {
+              var columns = [];
+              var data = [];
+              data = data.concat(self.columns[0]);
+              data.splice(0, 1);
+
+              self.categories.map(function (category, index) {
+                columns.push([category, data[index]]);
+              });
+              return columns;
+            }())
+          }
+        });
       }
-    });
+    };
   }
 };
 
 chartState.init();
-chartLabels.init();
+chartLabels.draw().bar();
+chartLabels.draw().pie();
