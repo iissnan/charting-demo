@@ -134,6 +134,161 @@ var chartLabels = {
   }
 };
 
+
+// TODO:
+// 1. Refactor
+// 2. Axis ticks
+var chartTime = {
+  init: function () {
+    this.chart = {};
+  },
+
+  issues: function() {
+    var issuesCreated = issues.sort(function (a, b) {
+      var da = +(new Date(a.created_at));
+      var db = +(new Date(b.created_at));
+      return da - db;
+    });
+    var issuesClosed = issues.filter(function (issue) {
+      return issue.closed_at;
+    }).sort(function (a, b) {
+      var da = +(new Date(a.closed_at));
+      var db = +(new Date(b.closed_at));
+      return da - db;
+    });
+
+    var created = [];
+    var closed = [];
+    var x = [];
+    var date;
+    var count;
+    var p;
+    var tempCreated = {};
+    var tempClosed = {};
+    var dateFormatter = d3.time.format('%Y-%m-%d');
+
+    issuesCreated.map(function (issue) {
+      date = dateFormatter(new Date(issue.created_at));
+      tempCreated[date] ?
+        tempCreated[date].count++ :
+        tempCreated[date] = {
+          time: date,
+          count: 0
+        };
+    });
+
+    issuesClosed.map(function (issue) {
+      date = dateFormatter(new Date(issue.closed_at));
+      tempClosed[date] ?
+        tempClosed[date].count++ :
+        tempClosed[date] = {
+          time: date,
+          count: 0
+        };
+    });
+
+    for (p in tempCreated) {
+      if (tempCreated.hasOwnProperty(p)) {
+        count = tempCreated[p].count;
+        if (count > 0) {
+          x.push(p);
+          created.push(tempCreated[p].count);
+        }
+      }
+    }
+
+    for (p in tempClosed) {
+      if (tempClosed.hasOwnProperty(p)) {
+        count = tempClosed[p].count;
+        if (count > 0) {
+          x.push(p);
+          closed.push(tempClosed[p].count);
+        }
+      }
+    }
+
+    return {
+      created: created,
+      closed: closed,
+      duration: x
+    };
+  },
+
+  ticks: function () {
+    var y = [].concat(this.issues().created);
+
+    y = $.grep(y, function (tick, index) {
+      return $.inArray(tick, y) === index;
+    }).sort();
+
+    return {
+      x: null,
+      y: y
+    };
+  },
+
+  draw: function () {
+    var self = this;
+
+    return {
+      bar: function () {
+        self.init();
+
+        self.chart.bar = c3.generate({
+          bindto: '.chart-time-bar',
+          data: {
+            x: 'x',
+            columns: [
+              ['x'].concat(self.issues().duration),
+              ['created'].concat(self.issues().created),
+              ['closed'].concat(self.issues().closed)
+            ]
+          },
+          axis: {
+            x: {
+              type: 'timeseries'
+            },
+            y: {
+              min: 1,
+              tick: {
+                values: self.ticks().y
+              }
+            }
+          }
+        });
+      },
+      area: function () {
+        self.init();
+        self.chart.area = c3.generate({
+          bindto: '.chart-time-area',
+          data: {
+            x: 'x',
+            columns: [
+              ['x'].concat(self.issues().duration),
+              ['create'].concat(self.issues().created),
+              ['closed'].concat(self.issues().closed)
+            ],
+            type: 'area'
+          },
+          axis: {
+            x: {
+              type: 'timeseries'
+            },
+            y: {
+              min: 1,
+              tick: {
+                values: self.ticks().y
+              }
+            }
+          }
+        });
+      }
+    };
+  }
+};
+
 chartState.init();
 chartLabels.draw().bar();
 chartLabels.draw().pie();
+chartTime.draw().bar();
+chartTime.draw().area();
