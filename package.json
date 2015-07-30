@@ -18,6 +18,8 @@
   "homepage": "https://github.com/iissnan/charting-demo",
   "devDependencies": {
     "browser-sync": "^2.8.0",
-    "gulp": "^3.9.0"
+    "gulp": "^3.9.0",
+    "gulp-data": "^1.2.0",
+    "superagent": "^1.2.0"
   }
 }
